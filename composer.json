@@ -1,0 +1,44 @@
+{
+  "name": "priondevelopment/brute",
+  "description": "Brute force enforcement and monitoring.",
+  "license": "MIT",
+  "homepage": "https://priondevelopment.com/packages/brute",
+  "support": {
+    "issues": "https://github.com/prion-development/brute/issues",
+    "source": "https://github.com/prion-development/brute"
+  },
+  "authors": [
+    {
+      "name": "Brandon Best",
+      "email": "brandonbest@priondevelopment.com"
+    }
+  ],
+  "require": {
+    "php": "^7.1.1"
+  },
+  "autoload": {
+    "classmap": [
+      "src"
+    ],
+    "psr-4": {
+      "Brute\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Brute\\Providers\\BruteServiceProvider"
+      ],
+      "aliases": {
+        "Brute": "Brute\\BruteFacade"
+      }
+    }
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "minimum-stability": "dev",
+  "require-dev": {
+    "orchestra/testbench": "^5.0@dev"
+  }
+}
