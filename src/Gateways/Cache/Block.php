@@ -1,14 +1,16 @@
 <?php
 
-namespace Brute;
+namespace Brute\Gateways\Cache;
 
+use Brute\BlockInterface;
+use Brute\BruteHelpers;
 use Brute\Exception\BruteException;
 
-class Block extends BruteBase
+class Block extends CacheAbstract implements BlockInterface
 {
+    use BruteHelpers;
 
     public $type = 'brute_block:';
-
 
     /**
      * Check if the key is blocked
@@ -81,8 +83,8 @@ class Block extends BruteBase
      */
     public function remove($key): void
     {
-        $attempt = $this->key($this->attempt . $key);
-        $block = $this->key($this->block . $key);
+        $attempt = $this->key(self::TAG_ATTEMPT . $key);
+        $block = $this->key(self::TAG_BLOCK . $key);
 
         $this->cache()->forget($attempt);
         $this->cache()->forget($block);

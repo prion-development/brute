@@ -1,15 +1,15 @@
 <?php
 
-namespace Brute;
+namespace Brute\Gateways\Cache;
 
-use Illuminate\Cache\TaggedCache;
+use \Illuminate\Cache\TaggedCache;
 
-class BruteBase
+abstract class CacheAbstract
 {
     public $type = '_brute_attempt_';
 
-    private $block = 'brute_block:';
-    private $attempt = 'brute_attempt:';
+    const TAG_BLOCK = 'brute_block:';
+    const TAG_ATTEMPT = 'brute_attempt:';
 
     public $cache;
 
@@ -37,10 +37,11 @@ class BruteBase
      *
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
-    protected function setCache(): void
+    protected function setCache(): TaggedCache
     {
         $tag = config('brute.cache.tag');
-        $this->cache = app()->make('cache')->tags($tag);
+        $this->cache = app('cache')->tags($tag);
+        return $this->cache;
     }
 
     /**
@@ -64,8 +65,8 @@ class BruteBase
     protected function filter(?string $key): string
     {
         $find = [
-            $this->block,
-            $this->attempt,
+            self::TAG_BLOCK,
+            self::TAG_ATTEMPT,
         ];
 
         $key = str_replace($find, '', $key);

@@ -1,10 +1,19 @@
 <?php
 
-namespace Brute\Setup;
+namespace Brute\Providers;
+
+/**
+ * This file is part of Prion Development's Brute Package,
+ * an brute force monitor and blocker for Lumen.
+ *
+ * @license MIT
+ * @company Prion Development
+ * @package Brute
+ */
 
 use Illuminate\Support\ServiceProvider;
 
-class Commands extends ServiceProvider implements SetupInterface
+class Commands extends ServiceProvider implements ProviderInterface
 {
     /**
      * The commands to be registered.
@@ -12,25 +21,13 @@ class Commands extends ServiceProvider implements SetupInterface
      * @var array
      */
     protected $commands = [
-        'Migration' => [
-            'class' => \Membrane\Commands\Migration::class,
-            'command' => 'command.membrane.migration',
+        'AttemptsDelete' => [
+            'class' => \Brute\Commands\AttemptsDelete::class,
+            'command' => 'command.brute.attempts-delete',
         ],
-        'Config' => [
-            'class' => \Membrane\Commands\Config::class,
-            'command' => 'command.membrane.config',
-        ],
-        'Seeder' => [
-            'class' => \Membrane\Commands\Seeder::class,
-            'command' => 'command.membrane.seeder',
-        ],
-        'Setup' => [
-            'class' => \Membrane\Commands\Setup::class,
-            'command' => 'command.membrane.setup',
-        ],
-        'TokenDeleteExpired' => [
-            'class' => \Membrane\Commands\Token\DeleteExpired::class,
-            'command' => 'command.membrane.token-delete-expired',
+        'BlocksDelete' => [
+            'class' => \Brute\Commands\BlocksDelete::class,
+            'command' => 'command.brute.blocks-delete',
         ],
     ];
 
@@ -41,6 +38,11 @@ class Commands extends ServiceProvider implements SetupInterface
      */
     public function boot(): void
     {
+        if (!$this->app->runningInConsole()) {
+            return;
+        }
+
+        $this->registerCommands();
     }
 
     /**
@@ -50,12 +52,6 @@ class Commands extends ServiceProvider implements SetupInterface
      */
     public function register(): void
     {
-        if (!$this->app->runningInConsole()) {
-            return;
-        }
-
-        $this->registerCommands();
-        $this->commands(array_column($this->commands, 'command'));
     }
 
     /**
@@ -79,5 +75,15 @@ class Commands extends ServiceProvider implements SetupInterface
         $this->app->singleton($command, function ($app) use ($class) {
             return new $class($app['files']);
         });
+    }
+
+    /**
+     * Pull all Commands for Brute
+     *
+     * @return array
+     */
+    public function all(): array
+    {
+        return array_column($this->commands, 'command');
     }
 }

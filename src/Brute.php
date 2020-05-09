@@ -30,13 +30,13 @@ class Brute
         $this->app = $app;
     }
 
-    public function attempt()
+    public function attempt(): AttemptInterface
     {
-
+        return $this->app->make(AttemptInterface::class);
     }
 
-    public function block()
+    public function block(): BlockInterface
     {
-
+        return $this->app->make(BlockInterface::class);
     }
 }

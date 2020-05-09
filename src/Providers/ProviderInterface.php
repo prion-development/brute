@@ -1,8 +1,8 @@
 <?php
 
-namespace Brute\Setup;
+namespace Brute\Providers;
 
-interface SetupInterface
+interface ProviderInterface
 {
     public function boot(): void;
 

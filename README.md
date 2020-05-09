@@ -23,3 +23,50 @@ Clear or reset your Laravel config cache.
 ## License
 
 Prion Brute is open-sourced software licensed under the [MIT license](http://opensource.org/licenses/MIT).
+
+
+## Check for Lock
+Check and see if $key is blocked:
+`Brute::isLocked($key);`
+
+Unlock $key:
+`Brute::unlock($key);`
+
+Lock $key:
+This will only lock a key if the number of attempts is great than or equal to the maximum.
+`Brute::lock($key);`
+
+Force a lock on $key:
+`Brute::lock($key, true);`
+
+## Manage Attempts
+
+To add an attempt:
+If the number of tries matches or is greater than the max number of tries, we will block $key.
+`Brute::attempt($key);`
+
+Attempts on $key:
+`Brute::attempts($key);`
+
+Remove an attempt on $key:
+`Brute::removeAttempt($key)`
+
+Remove "x" attempts on $key:
+`Brute::removeAttempt($key, x)`
+
+Maximum number of attempts on $key:
+`Brute::max($key);`
+
+Remove all attempts and blocks on a key
+`Brute::clear($key);`
+
+## How Brute works
+You can push a string into brute as an "attempt". An attempt records a UTC timestamp in
+the default cache database using a unique key. When the number of attempts is greater than the
+set limit, the key is locked.
+
+We automatically expire attempts if the timestamp is outside of the expiration config.
+
+## Running Tests
+1. Make sure composer packages are installed (`composer update`)
+2. vendor/bin/phpunit

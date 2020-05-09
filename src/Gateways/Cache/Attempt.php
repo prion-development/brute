@@ -1,11 +1,15 @@
 <?php
 
-namespace Brute;
+namespace Brute\Gateways\Cache;
 
+use Brute\AttemptInterface;
+use Brute\BruteHelpers;
 use Carbon\Carbon;
 
-class Attempt extends BruteBase
+class Attempt extends CacheAbstract implements AttemptInterface
 {
+    use BruteHelpers;
+
     public $type = 'brute_attempt:';
 
     /**

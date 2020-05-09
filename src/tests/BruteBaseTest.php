@@ -7,10 +7,10 @@ class BruteBaseTest extends BruteTestCase
      */
     public function testBruteSetCache()
     {
-        $method = new ReflectionMethod('\Brute\Attempt', 'cache');
+        $method = new ReflectionMethod('\Brute\Gateways\Cache\Attempt', 'cache');
         $method->setAccessible(true);
 
-        $object = new \Brute\Attempt;
+        $object = new \Brute\Gateways\Cache\Attempt;
         $this->assertTrue($method->invoke($object) instanceof \Illuminate\Cache\TaggedCache);
     }
 
@@ -21,10 +21,10 @@ class BruteBaseTest extends BruteTestCase
      */
     public function testBruteBaseFilter()
     {
-        $method = new ReflectionMethod('\Brute\Attempt', 'filter');
+        $method = new ReflectionMethod('\Brute\Gateways\Cache\Attempt', 'filter');
         $method->setAccessible(true);
 
-        $object = new \Brute\Attempt;
+        $object = new \Brute\Gateways\Cache\Attempt;
         $this->assertTrue($method->invoke($object, 'TestString::::TestString') == $object->type . 'TestString::TestString');
         $this->assertTrue($method->invoke($object, 'TestString::TestString') === $object->type . 'TestString::TestString');
         $this->assertTrue($method->invoke($object, 'TestString') === $object->type . 'TestString');
@@ -38,8 +38,8 @@ class BruteBaseTest extends BruteTestCase
      */
     public function testBruteBaseItemFilter()
     {
-        $this->assertTrue(app(\Brute\Attempt::class)->item('TestString::TestString')->item === 'TestString::TestString::');
-        $this->assertTrue(app(\Brute\Attempt::class)->item('TestString::::TestString')->item === 'TestString::TestString::');
+        $this->assertTrue(app(\Brute\Gateways\Cache\Attempt::class)->item('TestString::TestString')->item === 'TestString::TestString::');
+        $this->assertTrue(app(\Brute\Gateways\Cache\Attempt::class)->item('TestString::::TestString')->item === 'TestString::TestString::');
     }
 
     /**
@@ -47,7 +47,7 @@ class BruteBaseTest extends BruteTestCase
      */
     public function testBruteBasePrefixFitler()
     {
-        $this->assertTrue(app(\Brute\Attempt::class)->prefix('TestString::TestString')->prefix === 'TestString::TestString::');
-        $this->assertTrue(app(\Brute\Attempt::class)->prefix('TestString::::TestString')->prefix === 'TestString::TestString::');
+        $this->assertTrue(app(\Brute\Gateways\Cache\Attempt::class)->prefix('TestString::TestString')->prefix === 'TestString::TestString::');
+        $this->assertTrue(app(\Brute\Gateways\Cache\Attempt::class)->prefix('TestString::::TestString')->prefix === 'TestString::TestString::');
     }
 }
