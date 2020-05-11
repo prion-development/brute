@@ -3,13 +3,10 @@
 namespace Brute\Gateways\Cache;
 
 use Brute\BlockInterface;
-use Brute\BruteHelpers;
 use Brute\Exception\BruteException;
 
 class Block extends CacheAbstract implements BlockInterface
 {
-    use BruteHelpers;
-
     public $type = 'brute_block:';
 
     /**
@@ -18,75 +15,85 @@ class Block extends CacheAbstract implements BlockInterface
      * @param $key
      *
      * @return bool
-     * @throws BruteException
+     * @throws \Brute\Exception\BruteBlockedException
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
     public function check($key): bool
     {
-        $key = $this->key($key);
-        if (!$this->cache()->has($key)) {
+        if (!$this->exists($key)) {
             return true;
         }
 
-        throw new BruteException('The key is locked: ' . $key);
+        $this->exceptionBlocked($key);
     }
 
-
     /**
-     * Attempt to Block a Key
+     * Check if the key is blocked, extend the block before throwing an exception
      *
      * @param $key
-     * @param string $maxAttempts
      *
      * @return bool
+     * @throws \Brute\Exception\BruteBlockedException
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
      * @throws \Psr\SimpleCache\InvalidArgumentException
      */
-    public function attempt($key, $maxAttempts=''): bool
+    public function checkAndExtend($key): bool
     {
-        $attempts = app(\Brute\Attempt::class)->reset($this->prefix, $this->item)->add($key);
-        $maxAttempts = $maxAttempts ?? config('brute.attempts');
-
-        if ($attempts >= $maxAttempts) {
-            return $this->block($key);
+        if (!$this->exists($key)) {
+            return true;
         }
 
-        return false;
+        $this->extend($key);
+        $this->exceptionBlocked($key);
     }
 
+    /**
+     * Extend the Block
+     *
+     * @param $key
+     *
+     * @return Block
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
+    public function extend($key): BlockInterface
+    {
+        $this->add($key);
+        return $this;
+    }
 
     /**
      * Block a Key
      *
      * @param $key
      *
-     * @return bool
+     * @return Block
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
      * @throws \Psr\SimpleCache\InvalidArgumentException
      */
-    protected function block($key): bool
+    public function add($key): BlockInterface
     {
-        $expire = (int) config('prion.block_ttl');
-        $key = $this->filter($key);
+        $expire = (int) config('brute.block_ttl');
+        $key = $this->key($key);
         $this->cache()->set($key, 1, $expire);
-
-        return true;
+        return $this;
     }
-
 
     /**
      * Unblock a Key
      *
      * @param $key
      *
+     * @return Block
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
-    public function remove($key): void
+    public function delete($key): BlockInterface
     {
         $attempt = $this->key(self::TAG_ATTEMPT . $key);
         $block = $this->key(self::TAG_BLOCK . $key);
 
         $this->cache()->forget($attempt);
         $this->cache()->forget($block);
+        return $this;
     }
 }

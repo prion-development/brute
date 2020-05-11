@@ -21,7 +21,7 @@ class BruteBaseTest extends BruteTestCase
      */
     public function testBruteBaseFilter()
     {
-        $method = new ReflectionMethod('\Brute\Gateways\Cache\Attempt', 'filter');
+        $method = new ReflectionMethod('\Brute\Gateways\Cache\Attempt', 'key');
         $method->setAccessible(true);
 
         $object = new \Brute\Gateways\Cache\Attempt;
@@ -38,16 +38,23 @@ class BruteBaseTest extends BruteTestCase
      */
     public function testBruteBaseItemFilter()
     {
-        $this->assertTrue(app(\Brute\Gateways\Cache\Attempt::class)->item('TestString::TestString')->item === 'TestString::TestString::');
-        $this->assertTrue(app(\Brute\Gateways\Cache\Attempt::class)->item('TestString::::TestString')->item === 'TestString::TestString::');
+        $this->assertTrue(app(\Brute\Gateways\Cache\Attempt::class)->tag('TestString::TestString')->tags() === [0 => 'TestString::TestString::']);
+        $this->assertTrue(app(\Brute\Gateways\Cache\Attempt::class)->tag('TestString::::TestString')->tags() === [0 => 'TestString::TestString::']);
     }
 
     /**
      * Test Prefix Filtering
      */
-    public function testBruteBasePrefixFitler()
+    public function testBruteBasePrefixFilter()
     {
-        $this->assertTrue(app(\Brute\Gateways\Cache\Attempt::class)->prefix('TestString::TestString')->prefix === 'TestString::TestString::');
-        $this->assertTrue(app(\Brute\Gateways\Cache\Attempt::class)->prefix('TestString::::TestString')->prefix === 'TestString::TestString::');
+        $testString1 = 'TestString::TestString';
+        $this->assertTrue(app(\Brute\Gateways\Cache\Attempt::class)->tag($testString1)->tags() === [0 => $testString1 . '::']);
+
+        $testString1 = 'TestString::::TestString';
+        $testString2 = 'TestString2::::TestString2';
+        $this->assertTrue(app(\Brute\Gateways\Cache\Attempt::class)
+                ->tag($testString1)
+                ->tag($testString2)
+                ->tags() === [0 => 'TestString::TestString::', 1 => 'TestString2::TestString2::']);
     }
 }

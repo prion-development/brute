@@ -4,5 +4,13 @@ namespace Brute;
 
 interface BlockInterface
 {
-    const BRUTE_BLOCKED_KEY = 'The key is locked:';
+    public function add($key): BlockInterface;
+
+    public function check($key): bool;
+
+    public function checkAndExtend($key): bool;
+
+    public function delete($key): BlockInterface;
+
+    public function extend($key): BlockInterface;
 }

@@ -25,6 +25,9 @@
         "classmap": [
             "src"
         ],
+        "files": [
+            "src/BruteHelpers.php"
+        ],
         "psr-4": {
             "Brute\\": "src/"
         }

@@ -1,10 +1,7 @@
 <?php
 
-namespace Brute;
-
-trait BruteHelpers
-{
-    public function clean(string $string): string
+if (!function_exists('bruteKeyFilter')) {
+    function bruteKeyFilter(string $string): string
     {
         $string = str_replace("::::", "::", $string);
         return $string;

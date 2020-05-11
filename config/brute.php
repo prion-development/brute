@@ -47,7 +47,7 @@ return [
     |
     */
 
-    'attempts' => env('BRUTE_ATTEMPTS_MAX', 10),
+    'max_attempts' => env('BRUTE_ATTEMPTS_MAX', 10),
 
     /*
     |--------------------------------------------------------------------------

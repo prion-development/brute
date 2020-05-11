@@ -2,19 +2,20 @@
 
 namespace Brute\Gateways\Cache;
 
+use Brute\Exception\BruteBlockedException;
+use Carbon\Carbon;
 use \Illuminate\Cache\TaggedCache;
 
 abstract class CacheAbstract
 {
-    public $type = '_brute_attempt_';
+    public $type = 'brute_attempt:';
 
     const TAG_BLOCK = 'brute_block:';
     const TAG_ATTEMPT = 'brute_attempt:';
 
     public $cache;
 
-    public $prefix = '';
-    public $item = '';
+    protected $tags = [];
 
     /**
      * Load the Cache Method
@@ -36,6 +37,8 @@ abstract class CacheAbstract
      * Set the Cache
      *
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     *
+     * @return TaggedCache
      */
     protected function setCache(): TaggedCache
     {
@@ -48,76 +51,138 @@ abstract class CacheAbstract
      * Check if a Key Exists
      *
      * @param $key
-     * @return mixed
+     *
+     * @return bool
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
-    protected function exists($key): bool
+    protected function exists(string $key): bool
     {
-        return $this->cache->has($key);
+        $key = $this->key($key);
+        return $this->cache()->has($key);
     }
 
     /**
-     * Run $key through a filter
+     * Create a key $key
+     *
+     * {type}::{item}::{prefix}::{$value}
      *
      * @param string|null $key
      *
      * @return string
      */
-    protected function filter(?string $key): string
+    protected function key(string $value): string
+    {
+        $key = $this->prefix();
+        $key .= $this->cleanValue($value);
+        return $key;
+    }
+
+    /**
+     * Filter the Value we Store
+     *
+     * @param string $value
+     *
+     * @return string
+     */
+    protected function cleanValue(string $value): string
     {
         $find = [
             self::TAG_BLOCK,
             self::TAG_ATTEMPT,
         ];
 
-        $key = str_replace($find, '', $key);
-        $key = str_replace("::::", "::", $key);
-        $key = $this->type . $key;
-        $key = $this->item . $key;
-        $key = $this->prefix . $key;
+        $value = trim($value);
+        $value = str_replace($find, '', $value);
+        $value = bruteKeyFilter($value);
 
-        return trim($key);
+        return $value;
+    }
+
+    public function exceptionBlocked($key)
+    {
+        throw new BruteBlockedException('The tagged key ('. implode(', ', $this->tags) .') is blocked: ' . $key);
+    }
+
+    /**
+     * Use the Brute Class Type and User Tags to Build the Prefix
+     *
+     * @return string
+     */
+    protected function prefix(): string
+    {
+        $prefix = $this->type;
+        foreach ($this->tags as $tag) {
+            $prefix .= $tag;
+        }
+
+        return $prefix;
     }
 
     /**
      * Set the Prefix
      *
-     * @param $prefix
+     * Use a prefix to define how the brute key is used. Examples:
+     *  - Login
+     *  - Password Reset
+     *
+     * @param $tag
      * @return mixed
      */
-    public function prefix($prefix)
+    public function tag($tags)
     {
-        $this->prefix = $prefix . "::";
-        $this->prefix = str_replace("::::", "::", $this->prefix);
+        if (is_string($tags)) {
+            $tags = explode(',', $tags);
+        }
+
+        foreach ($tags as $tag) {
+            $tag = trim($tag) . "::";
+            $tag = bruteKeyFilter($tag);
+            $this->tags[] = $tag;
+        }
+
         return $this;
     }
 
-
-    /**
-     * Set the Item
-     *
-     * @param $app
-     * @return mixed
-     */
-    public function item($item)
+    public function tags()
     {
-        $this->item = $item . "::";
-        $this->item = str_replace("::::", "::", $this->item);
-        return $this;
+        return $this->tags;
     }
 
-
     /**
-     * Reset the Brute Prefix and Item
+     * Reset Tags
      *
-     * @param $prefix
-     * @param $item
      * @return $this
      */
-    public function reset($prefix, $item)
+    public function tagReset()
     {
-        $this->prefix($prefix);
-        $this->item($item);
-
+        $this->tags = [];
         return $this;
+    }
+
+    /**
+     * Reset the Attempts and Blocks
+     *
+     * @param string $key
+     *
+     * @return $this
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     */
+    public function reset(string $key)
+    {
+        $key = $this->key($key);
+        $this->cache()->forget($key);
+        return $this;
+    }
+
+    /**
+     * Make sure the timestamp is a Carbon timestamp
+     *
+     * @param $timestamp
+     *
+     * @return Carbon
+     */
+    public function toCarbon($timestamp)
+    {
+        return ($timestamp instanceof Carbon) ? $timestamp : Carbon::parse($timestamp, 'UTC');
     }
 }

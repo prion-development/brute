@@ -3,74 +3,91 @@
 namespace Brute\Gateways\Cache;
 
 use Brute\AttemptInterface;
-use Brute\BruteHelpers;
 use Carbon\Carbon;
 
 class Attempt extends CacheAbstract implements AttemptInterface
 {
-    use BruteHelpers;
-
     public $type = 'brute_attempt:';
-
-    /**
-     * Remove an Attempt
-     *
-     * @param $key
-     *
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     */
-    public function remove($key): void
-    {
-        $key = $this->filter($key);
-        $this->cache()->decrement($key);
-    }
-
-    /**
-     * Remove All Attempts
-     *
-     * @param $key
-     *
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
-     */
-    public function removeAll($key): void
-    {
-        $key = $this->filter($key);
-        $this->cache()->forget($key);
-    }
-
 
     /**
      * Add An Attempt
      *
-     * @param $key
-     * @param string $maxAttempts
+     * @param string $key
+     * @param int|null $maxAttempts
      *
-     * @return int
+     * @return AttemptInterface
+     * @throws \Brute\Exception\BruteBlockedException
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
      * @throws \Psr\SimpleCache\InvalidArgumentException
      */
-    public function add($key, $maxAttempts=''): int
+    public function add(string $key, ?int $maxAttempts = null): AttemptInterface
     {
-        $origialKey = $key;
-        $key = $this->filter($key);
-        $attempts = $this->cache()->get($key) ?? [];
+        $maxAttempts = $maxAttempts ?? config('brute.max_attempts');
+        $attempts = $this->all($key);
         $attempts[] = Carbon::now('UTC')->toDateTimeString();
 
-        $maxAttempts = $maxAttempts ?? config('brute.attempts');
-        if (count($attempts) > $maxAttempts) {
-            app(Block::class)->block($origialKey);
-        }
+        $expire = (int)config('brute.attempt_ttl');
+        $this->cache()->set($this->key($key), $attempts, $expire);
 
-        $expire = (int) config('brute.block_ttl');
-        $this->cache()->set($key, $attempts, $expire);
-
-        return $attempts;
+        $this->addBlock($key, $attempts, $maxAttempts);
+        return $this;
     }
 
+    /**
+     * Remove an Attempt
+     *
+     * This method removes the oldest valid attempt
+     *
+     * @param string $key
+     *
+     * @return AttemptInterface
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
+    public function delete(string $key): AttemptInterface
+    {
+        $attempts = $this->all($key);
+        rsort($attempts);
+        array_pop($attempts);
+
+        $expire = (int) config('brute.attempt_ttl');
+        $key = $this->key($key);
+        $this->cache()->set($key, $attempts, $expire);
+        return $this;
+    }
+
+    /**
+     * Do we need to block the value?
+     *
+     * @param string $key
+     * @param array $attempts
+     * @param int $maxAttempts
+     *
+     * @throws \Brute\Exception\BruteBlockedException
+     */
+    private function addBlock(string $key, array $attempts, ?int $maxAttempts): void
+    {
+        $maxAttempts = $maxAttempts ?? config('brute.max_attempts');
+        if (count($attempts) >= $maxAttempts) {
+            app(Block::class)->tag($this->tags)->add($key);
+            $this->exceptionBlocked($key);
+        }
+    }
+
+    /**
+     * Calculate the Total Number of Attempts
+     *
+     * @param $key
+     *
+     * @return int
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     */
     public function total($key): int
     {
-
+        $key = $this->key($key);
+        $attempts = $this->cache()->get($key) ?? [];
+        $this->removeInvalidTimestamps($attempts);
+        return count($attempts);
     }
 
     /**
@@ -81,15 +98,42 @@ class Attempt extends CacheAbstract implements AttemptInterface
      * @return array
      * @throws \Illuminate\Contracts\Container\BindingResolutionException
      */
-    public function attempts($key): array
+    public function all($key): array
     {
-        $origialKey = $key;
-        $key = $this->filter($key);
+        $key = $this->key($key);
         $attempts = $this->cache()->get($key) ?? [];
-        $now = Carbon::now('UTC');
+        return $this->removeInvalidTimestamps($attempts);
+    }
 
-        foreach ($attempts as $key => $attempt) {
-            $attempt = Carbon::parse($attempt, 'UTC');
+    /**
+     * Remove Invalid Timestamps
+     *
+     * @param array $timestamps
+     *
+     * @return array
+     */
+    public function removeInvalidTimestamps(array $timestamps = []): array
+    {
+        foreach ($timestamps as $key => $timestamp) {
+            $timestamp = $this->toCarbon($timestamp);
+            if ($this->expireTimestamp($timestamp)) {
+                unset($timestamps[$key]);
+            }
         }
+
+        return $timestamps;
+    }
+
+    /**
+     * Check if a Timestamp is Invalid
+     *
+     * @param Carbon $timestamp
+     *
+     * @return bool
+     */
+    public function expireTimestamp(Carbon $timestamp): bool
+    {
+        $now = Carbon::now('UTC');
+        return $timestamp->addMinutes(config('brute.attempt_ttl')) <= $now;
     }
 }
