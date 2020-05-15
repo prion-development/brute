@@ -7,7 +7,8 @@ namespace Brute;
  * with this class will be done through the Brute Facade
  *
  * @license MIT
- * @package Brute
+ * @company Prion Development
+ * @package RateLimiter
  */
 
 class Brute

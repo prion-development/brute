@@ -27,7 +27,7 @@ class Attempt extends CacheAbstract implements AttemptInterface
         $attempts[] = Carbon::now('UTC')->toDateTimeString();
 
         $expire = (int)config('brute.attempt_ttl');
-        $this->cache()->set($this->key($key), $attempts, $expire);
+        $this->cache()->set($this->token($key), $attempts, $expire);
 
         $this->addBlock($key, $attempts, $maxAttempts);
         return $this;
@@ -51,8 +51,8 @@ class Attempt extends CacheAbstract implements AttemptInterface
         array_pop($attempts);
 
         $expire = (int) config('brute.attempt_ttl');
-        $key = $this->key($key);
-        $this->cache()->set($key, $attempts, $expire);
+        $token = $this->token($key);
+        $this->cache()->set($token, $attempts, $expire);
         return $this;
     }
 
@@ -84,8 +84,8 @@ class Attempt extends CacheAbstract implements AttemptInterface
      */
     public function total($key): int
     {
-        $key = $this->key($key);
-        $attempts = $this->cache()->get($key) ?? [];
+        $token = $this->token($key);
+        $attempts = $this->cache()->get($token) ?? [];
         $this->removeInvalidTimestamps($attempts);
         return count($attempts);
     }
@@ -100,8 +100,8 @@ class Attempt extends CacheAbstract implements AttemptInterface
      */
     public function all($key): array
     {
-        $key = $this->key($key);
-        $attempts = $this->cache()->get($key) ?? [];
+        $token = $this->token($key);
+        $attempts = $this->cache()->get($token) ?? [];
         return $this->removeInvalidTimestamps($attempts);
     }
 

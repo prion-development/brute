@@ -21,7 +21,7 @@ class BruteBaseTest extends BruteTestCase
      */
     public function testBruteBaseFilter()
     {
-        $method = new ReflectionMethod('\Brute\Gateways\Cache\Attempt', 'key');
+        $method = new ReflectionMethod('\Brute\Gateways\Cache\Attempt', 'token');
         $method->setAccessible(true);
 
         $object = new \Brute\Gateways\Cache\Attempt;

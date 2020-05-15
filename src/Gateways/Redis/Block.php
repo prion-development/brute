@@ -1,9 +1,8 @@
 <?php
 
-namespace Brute\Gateways\Cache;
+namespace Brute\Gateways\Redis;
 
 use Brute\BlockInterface;
-use Brute\Exception\BruteException;
 
 class Block extends CacheAbstract implements BlockInterface
 {
@@ -75,7 +74,7 @@ class Block extends CacheAbstract implements BlockInterface
     {
         $expire = (int) config('brute.block_ttl');
         $token = $this->token($key);
-        $this->cache()->set($token, 1, $expire);
+        $this->redis()->set($token, 1, $expire);
         return $this;
     }
 
@@ -92,8 +91,8 @@ class Block extends CacheAbstract implements BlockInterface
         $attempt = $this->token(self::TAG_ATTEMPT . $key);
         $block = $this->token(self::TAG_BLOCK . $key);
 
-        $this->cache()->forget($attempt);
-        $this->cache()->forget($block);
+        $this->redis()->forget($attempt);
+        $this->redis()->del($block);
         return $this;
     }
 }

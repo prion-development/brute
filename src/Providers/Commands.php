@@ -26,7 +26,7 @@ class Commands extends ServiceProvider implements ProviderInterface
             'command' => 'command.brute.attempts-delete',
         ],
         'BlocksDelete' => [
-            'class' => \Brute\Commands\BlocksDelete::class,
+            'class' => \Brute\Commands\DeleteBlock::class,
             'command' => 'command.brute.blocks-delete',
         ],
     ];

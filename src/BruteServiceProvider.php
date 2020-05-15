@@ -11,7 +11,6 @@ namespace Brute;
  * @package Brute
  */
 
-use Brute\Providers\Config;
 use Illuminate\Support\ServiceProvider;
 
 class BruteServiceProvider extends ServiceProvider

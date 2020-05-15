@@ -4,7 +4,7 @@ namespace Brute\Commands;
 
 use Illuminate\Console\Command;
 
-class BlocksDelete extends Command
+class DeleteBlock extends Command
 {
     /**
      * The name and signature of the console command.

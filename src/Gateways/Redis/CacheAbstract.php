@@ -1,10 +1,9 @@
 <?php
 
-namespace Brute\Gateways\Cache;
+namespace Brute\Gateways\Redis;
 
 use Brute\Exception\BruteBlockedException;
 use Carbon\Carbon;
-use \Illuminate\Cache\TaggedCache;
 
 abstract class CacheAbstract
 {
@@ -13,39 +12,9 @@ abstract class CacheAbstract
     const TAG_BLOCK = 'brute_block:';
     const TAG_ATTEMPT = 'brute_attempt:';
 
-    public $cache;
+    private $redis;
 
     protected $tags = [];
-
-    /**
-     * Load the Cache Method
-     *
-     * @return mixed
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
-     */
-    protected function cache(): TaggedCache
-    {
-        if ($this->cache) {
-            return $this->cache;
-        }
-
-        $this->setCache();
-        return $this->cache;
-    }
-
-    /**
-     * Set the Cache
-     *
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
-     *
-     * @return TaggedCache
-     */
-    protected function setCache(): TaggedCache
-    {
-        $tag = config('brute.cache.tag');
-        $this->cache = app('cache')->tags($tag);
-        return $this->cache;
-    }
 
     /**
      * Check if a Key Exists
@@ -58,7 +27,7 @@ abstract class CacheAbstract
     protected function exists(string $key): bool
     {
         $token = $this->token($key);
-        return $this->cache()->has($token);
+        return $this->redis()->exists($token);
     }
 
     /**
@@ -72,9 +41,9 @@ abstract class CacheAbstract
      */
     protected function token(string $value): string
     {
-        $token = $this->prefix();
-        $token .= $this->cleanValue($value);
-        return $token;
+        $key = $this->prefix();
+        $key .= $this->cleanValue($value);
+        return $key;
     }
 
     /**
@@ -159,6 +128,16 @@ abstract class CacheAbstract
         return $this;
     }
 
+    protected function redis()
+    {
+        if (!empty($this->redis)) {
+            return $this->redis;
+        }
+
+        $redisConnection = config('');
+        return app('redis')->connection($redisConnection);
+    }
+
     /**
      * Reset the Attempts and Blocks
      *
@@ -170,18 +149,19 @@ abstract class CacheAbstract
     public function reset(string $key)
     {
         $token = $this->token($key);
-        $this->cache()->forget($token);
+        $this->redis()->del($token);
         return $this;
     }
 
     /**
      * Make sure the timestamp is a Carbon timestamp
      *
-     * @param $timestamp
+     * @param string|Carbon $timestamp
      *
      * @return Carbon
+     * @throws \Exception
      */
-    public function toCarbon($timestamp)
+    public function toCarbon($timestamp): Carbon
     {
         return ($timestamp instanceof Carbon) ? $timestamp : Carbon::parse($timestamp, 'UTC');
     }

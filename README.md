@@ -2,7 +2,7 @@
 
 Prion Brute monitors and enforces brute force attempts.
 
-Tested on Lumen 5.6
+Tested on Lumen 7
 
 ## Installation
 
@@ -70,3 +70,5 @@ We automatically expire attempts if the timestamp is outside of the expiration c
 ## Running Tests
 1. Make sure composer packages are installed (`composer update`)
 2. vendor/bin/phpunit
+
+## Check for Lock
