@@ -46,7 +46,7 @@ class Hour extends AddAttemptsAbstract implements AddAttemptsInterface
             return $this->redis()->get($token);
         }
 
-        $percentHourGone = $this->hourGonePercent();
+        $percentHourGone = 1 - $this->hourGonePercent();
         return $percentHourGone === 0 ? $this->redis()->get($token) : $percentHourGone * $this->redis()->get($token);
     }
 

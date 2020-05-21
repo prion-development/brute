@@ -84,7 +84,7 @@ class Minute extends AddAttemptsAbstract implements AddAttemptsInterface
 
         $secondsGone = Carbon::now('UTC')->format('s');
         $secondsGone = intval($secondsGone);
-        $percentMinuteGone = $secondsGone / 60;
+        $percentMinuteGone = 1 - $secondsGone / 60;
 
         return $percentMinuteGone === 0 ? $this->redis()->get($token) : $percentMinuteGone * $this->redis()->get($token);
     }
