@@ -1,6 +1,6 @@
 <?php
 
-class ConfigTest extends BruteBaseTest
+class BruteConfigTest extends BruteBaseTest
 {
     /**
      * Make sure the config is loading

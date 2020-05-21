@@ -4,16 +4,31 @@ namespace Brute\Gateways\Redis;
 
 use Brute\Exception\BruteBlockedException;
 use Carbon\Carbon;
+use Illuminate\Redis\Connections\PredisConnection;
 
 abstract class CacheAbstract
 {
+    /**
+     * @var string
+     */
     public $type = 'brute_attempt:';
 
     const TAG_BLOCK = 'brute_block:';
     const TAG_ATTEMPT = 'brute_attempt:';
 
+    /**
+     * @var null|string
+     */
+    private $key = null;
+
+    /**
+     * @var PredisConnection
+     */
     private $redis;
 
+    /**
+     * @var array
+     */
     protected $tags = [];
 
     /**
@@ -73,6 +88,24 @@ abstract class CacheAbstract
     }
 
     /**
+     * Set the User Defined Key
+     *
+     * @param string $key
+     *
+     * @return $this
+     */
+    public function setKey(string $key)
+    {
+        $this->key = $key;
+        return $this;
+    }
+
+    public function getKey()
+    {
+        return $this->key;
+    }
+
+    /**
      * Use the Brute Class Type and User Tags to Build the Prefix
      *
      * @return string
@@ -128,7 +161,7 @@ abstract class CacheAbstract
         return $this;
     }
 
-    protected function redis()
+    protected function redis(): PredisConnection
     {
         if (!empty($this->redis)) {
             return $this->redis;

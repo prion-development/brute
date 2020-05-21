@@ -26,6 +26,16 @@ abstract class AddAttemptsAbstract
         $this->attemptResource = $attemptResource;
     }
 
+    public function deleteAll(): AddAttemptsInterface
+    {
+        $tokens = $this->tokens();
+        foreach ($tokens as $token) {
+            $this->redis()->del($token);
+        }
+
+        return $this;
+    }
+
     protected function redis()
     {
         if (!empty($this->redis)) {
@@ -34,6 +44,12 @@ abstract class AddAttemptsAbstract
 
         $redisConnection = config('');
         return app('redis')->connection($redisConnection);
+    }
+
+    public function setResource(AttemptResource $attemptResource): AddAttemptsInterface
+    {
+        $this->attemptResource = $attemptResource;
+        return $this;
     }
 
     public function setTtl(int $ttl): AddAttemptsInterface

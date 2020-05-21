@@ -34,7 +34,7 @@ class Hour extends AddAttemptsAbstract implements AddAttemptsInterface
 
     public function firstHourToken(): string
     {
-        $firstHour = Carbon::now('UTC')->subHour()->format('i');
+        $firstHour = $this->firstHour();
         $firstHour = intval($firstHour);
         return $this->token($firstHour);
     }
@@ -46,11 +46,15 @@ class Hour extends AddAttemptsAbstract implements AddAttemptsInterface
             return $this->redis()->get($token);
         }
 
+        $percentHourGone = $this->hourGonePercent();
+        return $percentHourGone === 0 ? $this->redis()->get($token) : $percentHourGone * $this->redis()->get($token);
+    }
+
+    public function hourGonePercent()
+    {
         $minutesGone = Carbon::now('UTC')->format('m');
         $minutesGone = intval($minutesGone);
-        $percentHourGone = $minutesGone / 60;
-
-        return $percentHourGone === 0 ? $this->redis()->get($token) : $percentHourGone * $this->redis()->get($token);
+        return $minutesGone / 60;
     }
 
     public function shouldRun(): bool
@@ -83,9 +87,9 @@ class Hour extends AddAttemptsAbstract implements AddAttemptsInterface
     public function total(): int
     {
         $attempts = 0;
-        $firstMinute = $this->firstHourToken();
+        $firstHour = $this->firstHourToken();
         $tokens = $this->tokens();
-        $tokens = array_diff($tokens, [$firstMinute]);
+        $tokens = array_diff($tokens, [$firstHour]);
         $attempts += $this->firstHourTotal();
         $attempts += array_sum($this->redis()->mget($tokens));
 

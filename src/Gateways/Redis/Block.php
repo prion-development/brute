@@ -72,9 +72,10 @@ class Block extends CacheAbstract implements BlockInterface
      */
     public function add($key): BlockInterface
     {
-        $expire = (int) config('brute.block_ttl');
+        $expire = (int) config('brute.block_ttl', 15);
         $token = $this->token($key);
-        $this->redis()->set($token, 1, $expire);
+        $this->redis()->set($token, 1);
+        $this->redis()->expire($token, $expire);
         return $this;
     }
 

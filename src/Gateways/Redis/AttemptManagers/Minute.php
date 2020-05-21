@@ -32,7 +32,7 @@ class Minute extends AddAttemptsAbstract implements AddAttemptsInterface
 
     public function token(?int $minute=null): string
     {
-        $minute = is_null($minute) ? Carbon::now('UTC')->format('i') : 0;
+        $minute = is_null($minute) ? Carbon::now('UTC')->format('i') : $minute;
         $minute = intval($minute);
         return $this->attemptResource->token . ':m' . $minute;
     }
@@ -57,7 +57,7 @@ class Minute extends AddAttemptsAbstract implements AddAttemptsInterface
         $tokens = $this->tokens();
         $tokens = array_diff($tokens, [$firstMinute]);
         $attempts += $this->firstMinuteTotal();
-        $attempts += array_sum($this->redis()->mget($tokens));
+        $attempts += empty($tokens) ? 0 : array_sum($this->redis()->mget($tokens));
 
         return (int) $attempts ?? 0;
     }
@@ -70,7 +70,7 @@ class Minute extends AddAttemptsAbstract implements AddAttemptsInterface
 
     public function firstMinuteToken(): string
     {
-        $firstMinute = Carbon::now('UTC')->subMinute()->format('i');
+        $firstMinute = $this->firstMinute();
         $firstMinute = intval($firstMinute);
         return $this->token($firstMinute);
     }
