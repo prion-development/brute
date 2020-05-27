@@ -78,7 +78,7 @@ class Commands extends ServiceProvider implements ProviderInterface
     }
 
     /**
-     * Pull all Commands for Brute
+     * Pull all Commands
      *
      * @return array
      */
