@@ -3,11 +3,12 @@
 namespace Brute;
 
 /**
- * This file is part of Prion Development's Apiauth,
- * a role & permission management solution for Laravel.
+ * This file is part of Prion Development's Brute,
+ * a tag based request limiter.
  *
  * @license MIT
- * @package Laratrust
+ * @company Prion Development
+ * @package Brute
  */
 
 use Illuminate\Support\Facades\Facade;

@@ -7,7 +7,8 @@ namespace Brute;
  * with this class will be done through the Brute Facade
  *
  * @license MIT
- * @package Brute
+ * @company Prion Development
+ * @package RateLimiter
  */
 
 class Brute
@@ -30,13 +31,13 @@ class Brute
         $this->app = $app;
     }
 
-    public function attempt()
+    public function attempt(): AttemptInterface
     {
-
+        return $this->app->make(AttemptInterface::class);
     }
 
-    public function block()
+    public function block(): BlockInterface
     {
-
+        return $this->app->make(BlockInterface::class);
     }
 }

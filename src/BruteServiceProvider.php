@@ -3,17 +3,15 @@
 namespace Brute;
 
 /**
- * This file is part of Prion Development's Membrane Package,
- * an oauth account, role & permission management solution for Lumen.
+ * This file is part of Prion Development's Brute Package,
+ * an brute force monitor and blocker for Lumen.
  *
  * @license MIT
  * @company Prion Development
- * @package Membrane
+ * @package Brute
  */
 
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Console\Scheduling\Schedule;
 
 class BruteServiceProvider extends ServiceProvider
 {
@@ -25,8 +23,11 @@ class BruteServiceProvider extends ServiceProvider
     protected $defer = false;
 
     protected $setup = [
-        \Brute\Setup\Commands::class,
-        \Brute\Setup\Config::class,
+        \Brute\Providers\Config::class,
+
+        \Brute\Providers\BruteAttempt::class,
+        \Brute\Providers\BruteBlock::class,
+        \Brute\Providers\Commands::class,
     ];
 
     /**
@@ -46,23 +47,31 @@ class BruteServiceProvider extends ServiceProvider
     public function register()
     {
         $this->registerBrute();
-
-        foreach($this->setup as $setup) {
-            $this->app->register($setup);
-        }
+        $this->registerProviders();
     }
 
     /**
-     * Register Membrane in Laravel/Lumen
+     * Register Brute in Laravel/Lumen
      *
      */
-    protected function registerBrute(): void
+    private function registerBrute(): void
     {
         $this->app->bind('brute', function ($app) {
-            return new Brute($app);
+            return app(Brute::class, ['app' => $app]);
         });
 
         $this->app->alias('Brute', 'Brute\Brute');
+    }
+
+    /**
+     * Register Additional Providers, such as config setup
+     * and command setup
+     */
+    private function registerProviders(): void
+    {
+        foreach($this->setup as $setup) {
+            $this->app->register($setup);
+        }
     }
 
     /**
@@ -72,7 +81,8 @@ class BruteServiceProvider extends ServiceProvider
      */
     public function provides()
     {
-        return array_values(app(\Brute\Setup\Commands::class)->commands);
+        $commands = app(\Brute\Providers\Commands::class, ['app' => $this->app])->commands;
+        return array_column($commands, 'command');
     }
 
 }
